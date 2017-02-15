@@ -2,8 +2,9 @@
 module Main where
 
 import Haste.DOM
+import Haste.Events
 import Haskagon.Hexagon
-import Haste.Graphics.Canvas 
+import Haste.Graphics.Canvas
 
 createAndAddCanvas :: IO (Maybe Canvas)
 createAndAddCanvas = do
@@ -14,9 +15,51 @@ createAndAddCanvas = do
   documentBody `appendChild` c
   fromElem c
 
-main = createAndAddCanvas >>= \case
-  Just c -> runProg c
-  Nothing -> putStrLn "no!"
+createOptions :: Maybe Canvas -> IO ()
+createOptions canvas = do
+  let range :: Double -> Double -> IO Elem
+      range min max = newElem "input" `with` [
+        "type"  =: "range",
+        "min"   =: show min,
+        "max"   =: show max,
+        "value" =: "0"
+        ]
+      button text = newElem "button" `with` ["textContent" =: text]
+      container = newElem "div" `with` [
+        style "position" =: "fixed",
+        style "width" =: "200px",
+        style "height" =: "200px",
+        style "float" =: "right",
+        style "top" =: "0px",
+        style "right" =: "0px",
+        style "background-color" =: "#CCC",
+        "id" =: "options"
+        ]
+
+  [x, y] <- case canvas of Just c -> do
+                             [w, h] <- mapM (getProp c) ["width", "height"]
+                             sequence [range 0 $ read w, range 0 $ read h]
+                           Nothing -> do
+                             sequence [range 0 200, range 0 200]
+  size     <- range 0 200
+  rotation <- range 0 (2*pi) `with` ["step" =: show (pi / 30)]
+  [newHex, clear]  <- mapM button ["Create new Hexagon", "Clear board"]
+  opts <- container
+
+  clear `onEvent` Click $ \_ -> case canvas of
+    Just c -> render c $ return ()
+    Nothing -> return ()
+
+  mapM_ (appendChild opts) [x, y, size, rotation, newHex, clear]
+  documentBody `appendChild` opts
+  return ()
+
+main = do
+  canvas <- createAndAddCanvas
+  createOptions canvas
+  case canvas of
+    Just c -> runProg c
+    Nothing -> putStrLn "no!"
 
 
 runProg canvas = do
@@ -32,6 +75,7 @@ runProg canvas = do
     grid (width myHex, height myHex) canvasSize offset
     setFillColor (RGB 255 0   255)
     fill $ shape myHex
+    stroke $ vectorLine myHex
     mapM_ stroke $ pies myHex
     fill $ mapM_ (flip circle 5) corners
     stroke $ mapM_ (flip circle 5) corners
