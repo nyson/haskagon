@@ -6,7 +6,7 @@ module Haskagon.Hexagon (
   pie, pies,
   height, width,
   (<>+), (>*), (>+),
-  vectorLine
+  neighbours, vectorLine
   ) where
 
 import Haste.Graphics.Canvas
@@ -18,6 +18,12 @@ type Size = Double
 data Hexagon = Hexagon Size Angle
 data Pie = Pie Vector Vector
 
+instance Show Hexagon where
+  show (Hexagon s a) = concat [
+    "Hex: s=", show s, " px; a=",
+    show a, " rads"
+    ]
+
 instance ToShape Hexagon where
   toShape p h = path $ map (>+ p) [corner h ((pi/3) * x) | x <- [0..6]]
 
@@ -28,7 +34,6 @@ instance ToShape Pie where
 corner :: Hexagon -> Angle -> Point
 corner (Hexagon size ha) angle = (size * cos (ha + angle),
                                   size * sin (ha + angle))
-
 -- | Line of a side of the hexagon
 side :: Hexagon -> Angle -> Line
 side hex angle = (corner hex angle, corner hex $ angle + pi/3)
@@ -61,6 +66,10 @@ s >* a = (s * cos a, s * sin a)
 -- | Adding a point by a vector to find the resulting point
 (>+) :: Point -> Vector -> Point
 (x, y) >+ (dx, dy) = (x + dx, y + dy)
+
+neighbours :: Hexagon -> [Point]
+neighbours (Hexagon s a) = map (corner hex') [pi/3 * x | x <- [0..5]]
+  where hex' = (Hexagon (s*1.75) (a + pi/6))
 
 -- | Creating a vector from the hexagons starting angle
 vectorLine :: Point -> Hexagon -> Shape ()
