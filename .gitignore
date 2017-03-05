@@ -6,4 +6,3 @@ dist/
 /cabal.sandbox.config
 /src/Haskagon.js
 /src/Haskagon.html
-/stack.yaml
