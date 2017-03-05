@@ -56,7 +56,7 @@ createOptions canvas = do
     "step" =: show (pi / 30),
     "id" =: "rotation_slider"
     ]
-  toggleRendering <- button "Start rendering"
+  toggleRendering <- button "Stop rendering"
   opts <- container
 
   elems <- (++ [toggleRendering]) <$> sequence [
@@ -67,7 +67,7 @@ createOptions canvas = do
     ]
   liftIO $ mapM_ (appendChild opts) elems
   liftIO $ documentBody `appendChild` opts
-  col <- liftIO $ randomIO
+  col <- liftIO $ randomRIO (RGB 0 0 0, RGB 128 128 128)
 
   toggleRendering `onEvent` Click $ \_ -> do
     t <- timer <$> get
