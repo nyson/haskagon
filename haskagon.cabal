@@ -22,7 +22,8 @@ executable haskagon
   -- other-modules:       
   -- other-extensions:
   build-depends:       base >=4.8 && <4.10, random,
-                       array, mtl >= 2.2.1, transformers
+                       array, mtl >= 2.2.1, transformers,
+                       MonadRandom
 
   if impl(haste)
     ghc-options: --output-html

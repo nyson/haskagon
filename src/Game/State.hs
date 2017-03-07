@@ -13,6 +13,7 @@ module Game.State (
     )where
 
 import Control.Monad.Reader
+import Control.Monad.Random (runRand, getRandomR)
 import Data.Array
 import Haskagon.Hexagon
 import Haste.Graphics.Canvas (Point(..), Color(..))
@@ -23,12 +24,9 @@ import Haste.Events (MonadEvent(..), mkHandler)
 import Data.IORef
 
 instance Random Color where
-  random gen = randomR (RGB 0 0 0, RGB 255 255 255) gen
-  randomR (RGB r1 g1 b1, RGB r2 g2 b2) gen
-    = (RGB (r `mod` 256) (g `mod` 256) (b `mod` 256), gen3)
-    where (r, gen1) = randomR (r1, r2) gen
-          (g, gen2) = randomR (g1, g2) gen1
-          (b, gen3) = randomR (b1, b2) gen2
+  random = randomR (RGB 0 0 0, RGB 255 255 255)
+  randomR (RGB r1 g1 b1, RGB r2 g2 b2) gen = flip runRand gen
+    $ (\[r,g,b] -> RGB r g b) <$> mapM getRandomR [(r1,r2), (g1,g2), (b1,b2)]
 
 instance Show Color where
   show = \case
