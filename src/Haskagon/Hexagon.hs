@@ -45,7 +45,7 @@ pie hex angle = Pie c1 c2
 -- | Return a list with 6 triangels shaping the hexagon
 pies :: Hexagon -> [Pie]
 pies hex = map pieside [pi/3 * x | x <- [0, 2..5]]
-  where pieside angle = pie hex angle
+  where pieside = pie hex
 
 -- | Height of the hexagon
 height :: Hexagon -> Double

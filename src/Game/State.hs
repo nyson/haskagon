@@ -25,8 +25,9 @@ import Data.IORef
 
 instance Random Color where
   random = randomR (RGB 0 0 0, RGB 255 255 255)
-  randomR (RGB r1 g1 b1, RGB r2 g2 b2) gen = flip runRand gen
-    $ (\[r,g,b] -> RGB r g b) <$> mapM getRandomR [(r1,r2), (g1,g2), (b1,b2)]
+  randomR (RGB r1 g1 b1, RGB r2 g2 b2) gen
+    = flip runRand gen $ toRGB <$> mapM getRandomR [(r1,r2), (g1,g2), (b1,b2)]
+    where toRGB = (\[r, g, b] -> RGB r g b) . map (`mod` 256)
 
 instance Show Color where
   show = \case
@@ -47,32 +48,28 @@ newtype Game a = Game {unG :: ReaderT (IORef GameState) IO a}
 
 instance MonadState GameState Game where
   get = ask >>= liftIO . readIORef
-  put x = ask >>= liftIO . flip writeIORef x
+  put value = ask >>= liftIO . flip writeIORef value
 
 instance MonadEvent Game where
-  mkHandler f = do
-    ref <- ask
-    return $ \a -> run' ref (f a)
+  mkHandler f = runWithRef <$> ask
+    where runWithRef ref = run' ref . f
 
 run' :: IORef GameState -> Game () -> IO ()
 run' stateRef g = runReaderT (unG g) stateRef
 
 run :: Point -> Hexagon -> Game () -> IO ()
-run p hex action  = do
-  ref <- genState p hex >>= newIORef
-  runReaderT (unG action) ref
+run p hex action = genState p hex >>= runReaderT (unG action)
 
-genState :: Point -> Hexagon -> IO GameState
-genState p h = GameState
+genState :: Point -> Hexagon -> IO (IORef GameState)
+genState p h = newIORef =<< GameState
                <$> return h
                <*> mapM pointCol (p:map (>+ p) (neighbours h))
                <*> return Running
-  where pointCol p = (p,) <$> randomRIO
-          (RGB 128 128 128, RGB 255 255 255)
+  where pointCol p = (p,) <$> randomRIO (RGB 128 128 128, RGB 255 255 255)
 
 start, stop, toggleRun :: Game ()
-start = modify $ \st -> st {timer= Running}
-stop = modify $ \st -> st {timer= Stopped}
+start     = modify $ \st -> st {timer= Running}
+stop      = modify $ \st -> st {timer= Stopped}
 toggleRun = modify $ \st -> st {timer= t $ timer st}
   where t Running = Stopped
         t Stopped = Running

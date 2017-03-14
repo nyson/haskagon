@@ -84,9 +84,5 @@ createOptions canvas = do
   return $ do
     [xpos, ypos, s, r] <- liftIO $ map fromJust <$> mapM getValue
       [x, y, size, rotation]
-
-    modify $ \st -> st {
-      shape = Hexagon s r,
-      hexagons = [((xpos, ypos), col)]
-      }
+    modify $ \st -> st {shape = Hexagon s r}
 
