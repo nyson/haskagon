@@ -9,6 +9,8 @@ import UI.Options
 import Haste.Foreign (constant)
 import Game.Loop
 import Game.State
+import Control.Monad (forM_)
+import System.Random (randomRIO)
 
 createAndAddCanvas :: IO (Maybe Canvas)
 createAndAddCanvas = do
@@ -39,6 +41,6 @@ runProg canvas = do
   where start [x,y] = (read x / 2, read y / 2)
         redraw = do
           st <- get
-          liftIO $ render canvas $ flip mapM_ (hexagons st) $ \(p, col) -> do
+          liftIO $ render canvas $ forM_ (hexagons st) $ \(p, col) -> do
             setFillColor col
             fill . toShape p . shape $ st
